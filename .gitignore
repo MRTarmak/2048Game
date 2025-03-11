@@ -1,0 +1,44 @@
+# Unity generated files
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+[Uu]serSettings/
+
+# Visual Studio / MonoDevelop generated files
+.vscode/
+.idea/
+*.sln
+*.user
+*.csproj
+*.pidb
+*.suo
+*.userprefs
+*.unityproj
+
+# Rider
+.idea/
+*.sln.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Other files
+*.apk
+*.unitypackage
+*.pdb
+*.mdb
+*.opendb
+*.sln
+*.userprefs
