@@ -13,24 +13,24 @@ public class GameField : MonoBehaviour
 
     void Start()
     {
-        // InitializeField();
-        // CreateCell();
-        // CreateCell();
-        
         InitializeField();
-        CreateCell(0);
-        CreateCell(1);
-        CreateCell(2);
-        CreateCell(3);
-        CreateCell(4);
-        CreateCell(5);
-        CreateCell(6);
-        CreateCell(7);
-        CreateCell(8);
-        CreateCell(9);
-        CreateCell(10);
-        CreateCell(11);
-        CreateCell(12);
+        CreateCell(0.1f);
+        CreateCell(0.1f);
+        
+        // InitializeField();
+        // CreateCell(0);
+        // CreateCell(1);
+        // CreateCell(2);
+        // CreateCell(3);
+        // CreateCell(4);
+        // CreateCell(5);
+        // CreateCell(6);
+        // CreateCell(7);
+        // CreateCell(8);
+        // CreateCell(9);
+        // CreateCell(10);
+        // CreateCell(11);
+        // CreateCell(12);
     }
     
     private void InitializeField()
@@ -74,13 +74,13 @@ public class GameField : MonoBehaviour
         return new Vector2Int(-1, -1);
     }
 
-    public void CreateCell()
+    public void CreateCell(float probability)
     {
         Vector2Int position = GetEmptyPosition();
 
         if (position.x != -1 && position.y != -1)
         {
-            int value = Random.value <= 0.1f ? 2 : 1;
+            int value = Random.value <= probability ? 2 : 1;
             
             Cell cell = _cells.Find(cell => cell.Position == position);
             
@@ -117,4 +117,106 @@ public class GameField : MonoBehaviour
             cellViewObject.transform.name = "CellView";
         }
     }
+    
+    public void MoveCells(Vector2 direction)
+    {
+        bool reverseOrder = (direction == Vector2.right || direction == Vector2.down);
+        
+        List<Cell> sortedCells = GetSortedCells(direction, reverseOrder);
+        
+        foreach (var cell in sortedCells)
+        {
+            MoveCell(cell, direction);
+        }
+
+        foreach (var cell in sortedCells)
+        {
+            cell.Merged = false;
+        }
+        
+        CreateCell(0.2f);
+    }
+    
+    private List<Cell> GetSortedCells(Vector2 direction, bool reverseOrder)
+    {
+        List<Cell> sortedCells = new List<Cell>(_cells);
+
+        if (direction == Vector2.up || direction == Vector2.down)
+        {
+            sortedCells.Sort((a, b) => a.Position.y.CompareTo(b.Position.y));
+        }
+        else if (direction == Vector2.left || direction == Vector2.right)
+        {
+            sortedCells.Sort((a, b) => a.Position.x.CompareTo(b.Position.x));
+        }
+
+        if (reverseOrder)
+        {
+            sortedCells.Reverse();
+        }
+
+        return sortedCells;
+    }
+    
+    private void MoveCell(Cell cell, Vector2 direction)
+    {
+        Vector2Int newPosition = cell.Position;
+        
+        while (true)
+        {
+            Vector2Int nextPosition = newPosition + new Vector2Int((int)direction.x, (int)direction.y);
+            
+            if (nextPosition.x < 0 || nextPosition.x >= _fieldSize || nextPosition.y < 0 || nextPosition.y >= _fieldSize)
+            {
+                break;
+            }
+            
+            Cell nextCell = GetCellAtPosition(nextPosition);
+
+            if (nextCell == null)
+            {
+                newPosition = nextPosition;
+            }
+            else if (nextCell.Value == cell.Value && !nextCell.Merged)
+            {
+                newPosition = nextPosition;
+                cell.Merged = true;
+                break;
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        if (newPosition != cell.Position)
+        {
+            if (cell.Merged)
+            {
+                Cell mergedCell = GetCellAtPosition(newPosition);
+                _cells.Remove(mergedCell);
+
+                cell.Position = mergedCell.Position;
+                cell.Value++;
+            }
+            else
+            {
+                cell.Position = newPosition;
+            }
+        }
+    }
+
+    private Cell GetCellAtPosition(Vector2Int position)
+    {
+        foreach (var cell in _cells)
+        {
+            if (cell.Position == position)
+            {
+                return cell;
+            }
+        }
+        
+        return null;
+    }
+
 }

@@ -10,16 +10,18 @@ public class Cell : MonoBehaviour
     private int _value;
     
     private Vector2Int _position;
+    
+    private bool _merged;
 
     public int Value
     {
         get => _value;
         set
         {
-            if (this._value != value)
+            if (_value != value)
             {
-                this._value = value;
-                OnValueChanged?.Invoke(this._value);
+                _value = value;
+                OnValueChanged?.Invoke(_value);
             }
         }
     }
@@ -29,12 +31,18 @@ public class Cell : MonoBehaviour
         get => _position;
         set
         {
-            if (this._position != value)
+            if (_position != value)
             {
-                this._position = value;
-                OnPositionChanged?.Invoke(this._position);
+                _position = value;
+                OnPositionChanged?.Invoke(_position);
             }
         }
+    }
+
+    public bool Merged
+    {
+        get => _merged;
+        set => _merged = value;
     }
     
     public void Initialize(int initialValue, Vector2Int position)

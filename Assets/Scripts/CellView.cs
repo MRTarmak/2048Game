@@ -1,4 +1,3 @@
-using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,7 +28,7 @@ public class CellView : MonoBehaviour
 
     private void UpdateValue(int value)
     {
-        valueText.text = ((int) Math.Pow(2, value)).ToString();
+        valueText.text = ((int) Mathf.Pow(2, value)).ToString();
         UpdateColor();
         UpdateTextStyle();
     }
