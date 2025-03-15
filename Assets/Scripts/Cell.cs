@@ -11,7 +11,9 @@ public class Cell : MonoBehaviour
     
     private Vector2Int _position;
     
-    private bool _merged;
+    private int _cellIndex;
+    
+    private bool _merged = false;
 
     public int Value
     {
@@ -39,15 +41,22 @@ public class Cell : MonoBehaviour
         }
     }
 
+    public int CellIndex
+    {
+        get => _cellIndex;
+        set => _cellIndex = value;
+    }
+
     public bool Merged
     {
         get => _merged;
         set => _merged = value;
     }
     
-    public void Initialize(int initialValue, Vector2Int position)
+    public void Initialize(int initialValue, Vector2Int position, int cellIndex)
     {
         Value = initialValue;
         Position = position;
+        CellIndex = cellIndex;
     }
 }

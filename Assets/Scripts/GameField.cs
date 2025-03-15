@@ -11,12 +11,13 @@ public class GameField : MonoBehaviour
 
     private int _fieldSize = 4;
 
-    void Start()
+    private void Start()
     {
         InitializeField();
         CreateCell(0.1f);
         CreateCell(0.1f);
         
+        // Debug
         // InitializeField();
         // CreateCell(0);
         // CreateCell(1);
@@ -37,14 +38,14 @@ public class GameField : MonoBehaviour
     {
         GameObject emptyCells = GameObject.Find("EmptyCells");
         
-        for (int x = 0; x < _fieldSize; x++)
+        for (var x = 0; x < _fieldSize; x++)
         {
-            for (int y = 0; y < _fieldSize; y++)
+            for (var y = 0; y < _fieldSize; y++)
             {
                 Vector3 positionVector = new Vector3(x * 280 - 420, y * 280 - 620, 0);
                 GameObject emptyCellObject = Instantiate(emptyCellPrefab, positionVector, Quaternion.identity);
                 Cell cell = emptyCellObject.AddComponent<Cell>();
-                cell.Initialize(0, new Vector2Int(x, y));
+                cell.Initialize(0, new Vector2Int(x, y), x * 4 + y);
                 
                 _cells.Add(cell);
             
@@ -93,7 +94,7 @@ public class GameField : MonoBehaviour
             
             GameObject cellViews = GameObject.Find("CellViews");
             cellViewObject.transform.SetParent(cellViews.transform, false);
-            cellViewObject.transform.name = "CellView";
+            cellViewObject.transform.name = "CellView" + cell.CellIndex.ToString();
         }
     }
     
@@ -137,6 +138,60 @@ public class GameField : MonoBehaviour
         CreateCell(0.2f);
     }
     
+    private void MoveCell(Cell cell, Vector2 direction)
+    {
+        if (cell.Value == 0)
+        {
+            return;
+        }
+        
+        Vector2Int newPosition = cell.Position;
+        
+        while (true)
+        {
+            Vector2Int nextPosition = newPosition + new Vector2Int((int)direction.x, (int)direction.y);
+            
+            if (nextPosition.x < 0 || nextPosition.x >= _fieldSize || nextPosition.y < 0 || nextPosition.y >= _fieldSize)
+            {
+                break;
+            }
+            
+            Cell nextCell = _cells.Find(nextCell => nextCell.Position == nextPosition);
+
+            if (nextCell.Value == 0)
+            {
+                newPosition = nextPosition;
+            }
+            else if (nextCell.Value == cell.Value && !nextCell.Merged)
+            {
+                newPosition = nextPosition;
+                cell.Merged = true;
+                nextCell.Value = 0;
+                break;
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        if (newPosition != cell.Position)
+        {
+            if (cell.Merged)
+            {
+                GameObject cellView = GameObject.Find("CellView" + cell.CellIndex.ToString());
+                if (cellView != null)
+                {
+                    Destroy(cellView);
+                }
+                
+                cell.Value++;
+            }
+            cell.Position = newPosition;
+            Debug.Log($"Cell position {cell.Position}, {new Vector3(cell.Position.x * 280 - 420, cell.Position.y * 280 - 620, 0)}");
+        }
+    }
+    
     private List<Cell> GetSortedCells(Vector2 direction, bool reverseOrder)
     {
         List<Cell> sortedCells = new List<Cell>(_cells);
@@ -157,66 +212,4 @@ public class GameField : MonoBehaviour
 
         return sortedCells;
     }
-    
-    private void MoveCell(Cell cell, Vector2 direction)
-    {
-        Vector2Int newPosition = cell.Position;
-        
-        while (true)
-        {
-            Vector2Int nextPosition = newPosition + new Vector2Int((int)direction.x, (int)direction.y);
-            
-            if (nextPosition.x < 0 || nextPosition.x >= _fieldSize || nextPosition.y < 0 || nextPosition.y >= _fieldSize)
-            {
-                break;
-            }
-            
-            Cell nextCell = GetCellAtPosition(nextPosition);
-
-            if (nextCell == null)
-            {
-                newPosition = nextPosition;
-            }
-            else if (nextCell.Value == cell.Value && !nextCell.Merged)
-            {
-                newPosition = nextPosition;
-                cell.Merged = true;
-                break;
-            }
-            else
-            {
-                break;
-            }
-        }
-        
-        if (newPosition != cell.Position)
-        {
-            if (cell.Merged)
-            {
-                Cell mergedCell = GetCellAtPosition(newPosition);
-                _cells.Remove(mergedCell);
-
-                cell.Position = mergedCell.Position;
-                cell.Value++;
-            }
-            else
-            {
-                cell.Position = newPosition;
-            }
-        }
-    }
-
-    private Cell GetCellAtPosition(Vector2Int position)
-    {
-        foreach (var cell in _cells)
-        {
-            if (cell.Position == position)
-            {
-                return cell;
-            }
-        }
-        
-        return null;
-    }
-
 }
