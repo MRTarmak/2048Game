@@ -50,15 +50,14 @@ public class InputHandler : MonoBehaviour
     
     private void HandleInput(Vector2 direction)
     {
-        Debug.Log($"Input received: {direction}");
-        _gameField.MoveCells(direction);
+        StartCoroutine(_gameField.MoveCells(direction));
     }
     
     private void HandleSwipe(InputAction.CallbackContext context)
     {
-        Vector2 delta = context.ReadValue<Vector2>();
+        var delta = context.ReadValue<Vector2>();
         
-        Vector2 direction = GetSwipeDirection(delta);
+        var direction = GetSwipeDirection(delta);
 
         if (direction != Vector2.zero)
         {
@@ -66,7 +65,7 @@ public class InputHandler : MonoBehaviour
         }
     }
     
-    private Vector2 GetSwipeDirection(Vector2 delta)
+    private static Vector2 GetSwipeDirection(Vector2 delta)
     {
         if (Mathf.Abs(delta.x) > Mathf.Abs(delta.y))
         {

@@ -7,11 +7,11 @@ public class Cell : MonoBehaviour
     
     public event Action<Vector2Int> OnPositionChanged;
     
+    public GameObject cellView;
+    
     private int _value;
     
     private Vector2Int _position;
-    
-    private int _cellIndex;
     
     private bool _merged = false;
 
@@ -41,22 +41,19 @@ public class Cell : MonoBehaviour
         }
     }
 
-    public int CellIndex
-    {
-        get => _cellIndex;
-        set => _cellIndex = value;
-    }
+    public GameObject CellView { get; set; }
 
-    public bool Merged
-    {
-        get => _merged;
-        set => _merged = value;
-    }
+    public bool Merged { get; set; }
     
-    public void Initialize(int initialValue, Vector2Int position, int cellIndex)
+    public void Initialize(int initialValue, Vector2Int position, GameObject cellView)
     {
         Value = initialValue;
         Position = position;
-        CellIndex = cellIndex;
+        CellView = cellView;
+    }
+
+    public static Vector2 GetWorldPosition(Vector2Int position)
+    {
+        return new Vector2(position.x * 280 - 420, position.y * 280 - 620);
     }
 }

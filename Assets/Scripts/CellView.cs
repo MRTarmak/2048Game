@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,7 +18,7 @@ public class CellView : MonoBehaviour
     
     public void Init(Cell cell)
     {
-        this._cell = cell;
+        _cell = cell;
 
         cell.OnValueChanged += UpdateValue;
         cell.OnPositionChanged += UpdatePosition;
@@ -35,8 +36,8 @@ public class CellView : MonoBehaviour
 
     private void UpdatePosition(Vector2Int position)
     {
-        RectTransform rectTransform = GetComponent<RectTransform>();
-        rectTransform.anchoredPosition = new Vector2(position.x * 280 - 420, position.y * 280 - 620);
+        var rectTransform = GetComponent<RectTransform>();
+        rectTransform.anchoredPosition = Cell.GetWorldPosition(position);
     }
     
     private void OnDestroy()
@@ -48,7 +49,7 @@ public class CellView : MonoBehaviour
         }
     }
 
-    private Color ColorLerp(Color colorA, Color colorB, float t)
+    private static Color ColorLerp(Color colorA, Color colorB, float t)
     {
         var r = Mathf.Lerp(colorA.r, colorB.r, t);
         var g = Mathf.Lerp(colorA.g, colorB.g, t);
@@ -103,5 +104,102 @@ public class CellView : MonoBehaviour
                 valueText.fontSize = 0;
                 break;
         }
+    }
+    
+    public static IEnumerator MoveCellAnimation(Cell cell, Vector2Int newPosition)
+    {
+        Vector3 startPos = Cell.GetWorldPosition(cell.Position);
+        Vector3 endPos = Cell.GetWorldPosition(newPosition);
+        var duration = 0.1f;
+        var elapsed = 0f;
+        var rectTransform = cell.CellView.GetComponent<RectTransform>();
+        
+        while (elapsed < duration)
+        {
+            rectTransform.anchoredPosition = Vector3.Lerp(startPos, endPos, elapsed/duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        
+        rectTransform.anchoredPosition = endPos;
+    }
+    
+    public static IEnumerator MergeCellAnimation(Cell disappearingCell, Cell targetCell)
+    {
+        var duration = 0.1f;
+        var elapsed = 0f;
+        
+        var rectTransform = disappearingCell.CellView.GetComponent<RectTransform>();
+        var startScale = rectTransform.localScale;
+    
+        while (elapsed < duration)
+        {
+            rectTransform.localScale = Vector3.Lerp(startScale, Vector3.zero, elapsed/duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        Destroy(disappearingCell.gameObject);
+        
+        rectTransform = targetCell.CellView.GetComponent<RectTransform>();
+        var targetStartScale = rectTransform.localScale;
+        elapsed = 0f;
+    
+        while (elapsed < duration)
+        {
+            rectTransform.localScale = Vector3.Lerp(targetStartScale, targetStartScale * 1.2f, elapsed/duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            rectTransform.localScale = Vector3.Lerp(targetStartScale * 1.2f, targetStartScale, elapsed/duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+    
+    public static IEnumerator SpawnCellAnimation(Cell cell)
+    {
+        var rectTransform = cell.CellView.GetComponent<RectTransform>();
+    
+        var duration = 0.15f;
+        var elapsed = 0f;
+        var startScale = Vector3.zero;
+        var endScale = new Vector3(2, 2, 2);
+    
+        rectTransform.localScale = startScale;
+    
+        while (elapsed < duration)
+        {
+            rectTransform.localScale = Vector3.Lerp(startScale, endScale, elapsed/duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    
+        rectTransform.localScale = endScale;
+    
+        elapsed = 0f;
+        var bounceDuration = 0.1f;
+        var bounceScale = endScale * 1.1f;
+    
+        while (elapsed < bounceDuration)
+        {
+            rectTransform.localScale = Vector3.Lerp(endScale, bounceScale, elapsed/bounceDuration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    
+        elapsed = 0f;
+        while (elapsed < bounceDuration)
+        {
+            rectTransform.localScale = Vector3.Lerp(bounceScale, endScale, elapsed/bounceDuration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    
+        rectTransform.localScale = endScale;
     }
 }
