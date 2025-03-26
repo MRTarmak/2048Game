@@ -50,6 +50,8 @@ public class InputHandler : MonoBehaviour
     
     private void HandleInput(Vector2 direction)
     {
+        Debug.Log($"Input received: {direction}");
+        
         if (_gameField.gameOver)
         {
             _gameField.ResetGame();
