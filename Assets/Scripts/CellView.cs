@@ -1,4 +1,4 @@
-using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,16 +9,16 @@ public class CellView : MonoBehaviour
     
     private Image _cellImage;
     
-    public TextMeshProUGUI valueText;
+    [SerializeField] private TextMeshProUGUI valueText;
 
-    void Awake()
+    private void Awake()
     {
         _cellImage = GetComponent<Image>();
     }
     
     public void Init(Cell cell)
     {
-        this._cell = cell;
+        _cell = cell;
 
         cell.OnValueChanged += UpdateValue;
         cell.OnPositionChanged += UpdatePosition;
@@ -29,14 +29,15 @@ public class CellView : MonoBehaviour
 
     private void UpdateValue(int value)
     {
-        valueText.text = ((int) Math.Pow(2, value)).ToString();
+        valueText.text = ((int)Mathf.Pow(2, value)).ToString();
         UpdateColor();
         UpdateTextStyle();
     }
 
     private void UpdatePosition(Vector2Int position)
     {
-        transform.position = new Vector3(position.x * 280 - 420, position.y * 280 - 620, 0);
+        var rectTransform = GetComponent<RectTransform>();
+        rectTransform.anchoredPosition = Cell.GetWorldPosition(position);
     }
     
     private void OnDestroy()
@@ -48,46 +49,26 @@ public class CellView : MonoBehaviour
         }
     }
 
+    private static Color ColorLerp(Color colorA, Color colorB, float t)
+    {
+        var r = Mathf.Lerp(colorA.r, colorB.r, t);
+        var g = Mathf.Lerp(colorA.g, colorB.g, t);
+        var b = Mathf.Lerp(colorA.b, colorB.b, t);
+        
+        return new Color(r, g, b);
+    }
+
     private void UpdateColor()
     {
-        switch (_cell.Value)
+        if (_cell.Value > 0 && _cell.Value <= 11)
         {
-            case 1:
-                _cellImage.color = new Color(238 / 255f, 228 / 255f, 218 / 255f);
-                break;
-            case 2:
-                _cellImage.color = new Color(237 / 255f, 224 / 255f, 200 / 255f);
-                break;
-            case 3:
-                _cellImage.color = new Color(242 / 255f, 177 / 255f, 121 / 255f);
-                break;
-            case 4:
-                _cellImage.color = new Color(245 / 255f, 149 / 255f, 99 / 255f);
-                break;
-            case 5:
-                _cellImage.color = new Color(246 / 255f, 124 / 255f, 95 / 255f);
-                break;
-            case 6:
-                _cellImage.color = new Color(246 / 255f, 94 / 255f, 59 / 255f);
-                break;
-            case 7:
-                _cellImage.color = new Color(237 / 255f, 207 / 255f, 114 / 255f);
-                break;
-            case 8:
-                _cellImage.color = new Color(237 / 255f, 204 / 255f, 97 / 255f);
-                break;
-            case 9:
-                _cellImage.color = new Color(237 / 255f, 200 / 255f, 80 / 255f);
-                break;
-            case 10:
-                _cellImage.color = new Color(237 / 255f, 197 / 255f, 63 / 255f);
-                break;
-            case 11:
-                _cellImage.color = new Color(237 / 255f, 194 / 255f, 46 / 255f);
-                break;
-            default:
-                _cellImage.color = Color.clear;
-                break;
+            Color colorA = new Color(240 / 255f, 230 / 255f, 218 / 255f);
+            Color colorB = new Color(255 / 255f, 65 / 255f, 29 / 255f);
+            _cellImage.color = ColorLerp(colorA, colorB, (float)(_cell.Value - 1) / 10);
+        }
+        else
+        {
+            _cellImage.color = Color.clear;
         }
     }
     
@@ -97,10 +78,10 @@ public class CellView : MonoBehaviour
         {
             case 1:
             case 2:
+            case 3:
                 valueText.color = new Color(143 / 255f, 132 / 255f, 111 / 255f);
                 valueText.fontSize = 85;
                 break;
-            case 3:
             case 4:
             case 5:
             case 6:
@@ -111,17 +92,114 @@ public class CellView : MonoBehaviour
             case 8:
             case 9:
                 valueText.color = new Color(253 / 255f, 231 / 255f, 210 / 255f);
-                valueText.fontSize = 70;
+                valueText.fontSize = 65;
                 break;
             case 10:
             case 11:
                 valueText.color = new Color(253 / 255f, 231 / 255f, 210 / 255f);
-                valueText.fontSize = 50;
+                valueText.fontSize = 45;
                 break;
             default:
                 valueText.color = Color.clear;
                 valueText.fontSize = 0;
                 break;
         }
+    }
+    
+    public static IEnumerator MoveCellAnimation(Cell cell, Vector2Int newPosition)
+    {
+        Vector3 startPos = Cell.GetWorldPosition(cell.Position);
+        Vector3 endPos = Cell.GetWorldPosition(newPosition);
+        var duration = 0.1f;
+        var elapsed = 0f;
+        var rectTransform = cell.CellView.GetComponent<RectTransform>();
+        
+        while (elapsed < duration)
+        {
+            rectTransform.anchoredPosition = Vector3.Lerp(startPos, endPos, elapsed/duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        
+        rectTransform.anchoredPosition = endPos;
+    }
+    
+    public static IEnumerator MergeCellAnimation(Cell disappearingCell, Cell targetCell)
+    {
+        var duration = 0.1f;
+        var elapsed = 0f;
+        
+        var rectTransform = disappearingCell.CellView.GetComponent<RectTransform>();
+        var startScale = rectTransform.localScale;
+    
+        while (elapsed < duration)
+        {
+            rectTransform.localScale = Vector3.Lerp(startScale, Vector3.zero, elapsed/duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        Destroy(disappearingCell.gameObject);
+        
+        rectTransform = targetCell.CellView.GetComponent<RectTransform>();
+        var targetStartScale = rectTransform.localScale;
+        elapsed = 0f;
+    
+        while (elapsed < duration)
+        {
+            rectTransform.localScale = Vector3.Lerp(targetStartScale, targetStartScale * 1.2f, elapsed/duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            rectTransform.localScale = Vector3.Lerp(targetStartScale * 1.2f, targetStartScale, elapsed/duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+    
+    public static IEnumerator SpawnCellAnimation(Cell cell)
+    {
+        var rectTransform = cell.CellView.GetComponent<RectTransform>();
+    
+        var duration = 0.15f;
+        var elapsed = 0f;
+        var startScale = Vector3.zero;
+        var endScale = new Vector3(2, 2, 2);
+    
+        rectTransform.localScale = startScale;
+    
+        while (elapsed < duration)
+        {
+            rectTransform.localScale = Vector3.Lerp(startScale, endScale, elapsed/duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    
+        rectTransform.localScale = endScale;
+    
+        elapsed = 0f;
+        var bounceDuration = 0.1f;
+        var bounceScale = endScale * 1.1f;
+    
+        while (elapsed < bounceDuration)
+        {
+            rectTransform.localScale = Vector3.Lerp(endScale, bounceScale, elapsed/bounceDuration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    
+        elapsed = 0f;
+        while (elapsed < bounceDuration)
+        {
+            rectTransform.localScale = Vector3.Lerp(bounceScale, endScale, elapsed/bounceDuration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    
+        rectTransform.localScale = endScale;
     }
 }
