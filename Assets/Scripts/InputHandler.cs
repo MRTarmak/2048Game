@@ -50,7 +50,14 @@ public class InputHandler : MonoBehaviour
     
     private void HandleInput(Vector2 direction)
     {
-        StartCoroutine(_gameField.MoveCells(direction));
+        if (_gameField.gameOver)
+        {
+            _gameField.ResetGame();
+        }
+        else if (!_gameField.IsAnimating)
+        {
+            StartCoroutine(_gameField.MoveCells(direction));
+        }
     }
     
     private void HandleSwipe(InputAction.CallbackContext context)

@@ -9,7 +9,7 @@ public class CellView : MonoBehaviour
     
     private Image _cellImage;
     
-    public TextMeshProUGUI valueText;
+    [SerializeField] private TextMeshProUGUI valueText;
 
     private void Awake()
     {
